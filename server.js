@@ -28,7 +28,7 @@ app.post("/pay", async (req, res) => {
     customer_email: "test@example.com"
   };
   try {
-    const resp = await axios.post("https://sandbox.pocket.com.bn/api/payment", payload, {
+    const resp = await axios.post("http://pay.threeg.asia/-Test", payload, {
       headers: {
         "X-POCKET-API-KEY": process.env.POCKET_API_KEY,
         "X-POCKET-SALT": process.env.POCKET_SALT
