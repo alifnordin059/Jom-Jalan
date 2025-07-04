@@ -1,0 +1,70 @@
+<!DOCTYPE html><html><head>
+  <title>JOM JALAN</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>body{font-family:sans-serif;max-width:600px;margin:auto;padding:1em;}
+  button{padding:0.5em 1em;font-size:1em;}input,select{width:100%;padding:0.5em;margin:0.5em 0;}</style>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_KEY&libraries=places"></script>
+</head><body>
+  <h2>JOM JALAN Booking</h2>
+  <input id="name" placeholder="Name" />
+  <input id="phone" placeholder="Phone" />
+  <input id="pickup" placeholder="Pickup Address" />
+  <input id="dropoff" placeholder="Dropoff Address" />
+  <button id="estimate">Estimate Fare</button>
+  <div id="fare"></div>
+  <button id="pay" disabled>Pay BND <span id="amt"></span></button>
+
+  <script>
+    let pickupAuto, dropoffAuto;
+    function initMap(){
+      pickupAuto = new google.maps.places.Autocomplete(document.getElementById("pickup"));
+      dropoffAuto = new google.maps.places.Autocomplete(document.getElementById("dropoff"));
+    }
+    window.onload = initMap;
+
+    document.getElementById("estimate").onclick = () => {
+      const pu = document.getElementById("pickup").value,
+            doff = document.getElementById("dropoff").value;
+      if(!pu||!doff) return alert("Enter both pickup & dropoff");
+
+      const service = new google.maps.DistanceMatrixService();
+      service.getDistanceMatrix({
+        origins: [pu],
+        destinations: [doff],
+        travelMode: "DRIVING"
+      }, (resp,status) => {
+        if(status==="OK") {
+          const distKm = resp.rows[0].elements[0].distance.value/1000;
+          fetch("/fare", {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({ distance: distKm })
+          }).then(r=>r.json()).then(data => {
+            document.getElementById("fare").textContent = "Estimated Fare: BND " + data.fare;
+            document.getElementById("amt").textContent = data.fare;
+            document.getElementById("pay").disabled = false;
+          });
+        }
+      });
+    };
+
+    document.getElementById("pay").onclick = () => {
+      const payload = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        pickup: document.getElementById("pickup").value,
+        dropoff: document.getElementById("dropoff").value,
+        booking_ref: "JOM" + Date.now(),
+        amount: document.getElementById("amt").textContent
+      };
+      fetch("/pay", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      }).then(r=>r.json()).then(data => {
+        if(data.redirect) window.location = data.redirect;
+        else alert("Error: "+data.error);
+      });
+    };
+  </script>
+</body></html>
