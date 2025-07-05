@@ -1,9 +1,20 @@
 const express = require('express');
 const axios = require('axios');
+const path = require('path');
+
 const app = express();
 
 app.use(express.json());
 
+// Optional: Serve frontend if you have built it into public/build
+app.use(express.static(path.join(__dirname, 'public/build')));
+
+// GET / — prevent "Cannot GET /"
+app.get('/', (req, res) => {
+  res.send('API is running. Use POST /create-pocket-payment');
+});
+
+// POST /create-pocket-payment — Pocket API integration
 app.post('/create-pocket-payment', async (req, res) => {
   try {
     const orderId = Math.floor(10000 + Math.random() * 90000); // random order_id
@@ -50,6 +61,11 @@ app.post('/create-pocket-payment', async (req, res) => {
       details: error.response?.data || error.message
     });
   }
+});
+
+// Optional: Serve index.html for frontend routes (React)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/build', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
