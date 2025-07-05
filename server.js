@@ -84,3 +84,5 @@ app.get('/payment-success', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚕 Jom Jalan server running on http://localhost:${PORT}`);
 });
+const fs = require('fs');
+fs.writeFileSync('mynewfile.txt', 'This is my new file!');
