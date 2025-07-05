@@ -1,15 +1,11 @@
 const express = require('express');
 const axios = require('axios');
-const path = require('path');
 
 const app = express();
 
 app.use(express.json());
 
-// Optional: Serve frontend if you have built it into public/build
-app.use(express.static(path.join(__dirname, 'public/build')));
-
-// GET / — prevent "Cannot GET /"
+// GET / — prevent "Cannot GET /" on Render
 app.get('/', (req, res) => {
   res.send('API is running. Use POST /create-pocket-payment');
 });
@@ -18,6 +14,7 @@ app.get('/', (req, res) => {
 app.post('/create-pocket-payment', async (req, res) => {
   try {
     const orderId = Math.floor(10000 + Math.random() * 90000); // random order_id
+
     const payload = {
       api_key: "XnUgH1PyIZ8p1iF2IbKUiOBzdrLPNnWq",
       salt: "FOLzaoJSdbgaNiVVA73vGiIR7yovZury4OdOalPFoWTdKmDVxfoJCJYTs4nhUFS2",
@@ -63,12 +60,8 @@ app.post('/create-pocket-payment', async (req, res) => {
   }
 });
 
-// Optional: Serve index.html for frontend routes (React)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/build', 'index.html'));
-});
-
+// Start server on Render-assigned port or 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`API server running on port ${PORT}`);
 });
