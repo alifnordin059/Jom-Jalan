@@ -3,6 +3,7 @@ const express = require('express');
 const axios = require('axios');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,19 +12,36 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Sample home route (optional)
+// Home route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Create Pocket Pay payment
+// Helper: Get new order ID from Pocket Pay
+async function getOrderId() {
+  try {
+    const response = await axios.post('http://pay.threeg.asia/payments/getNewOrderId', {
+      api_key: process.env.POCKET_API_KEY,
+      salt: process.env.POCKET_SALT
+    });
+
+    return response.data.order_id;
+  } catch (error) {
+    console.error('❌ Failed to get order ID:', error.response?.data || error.message);
+    throw new Error('Order ID generation failed');
+  }
+}
+
+// Payment endpoint
 app.post('/pay', async (req, res) => {
   try {
-    const { amount, orderId } = req.body;
+    const { amount } = req.body;
 
-    if (!amount || !orderId) {
-      return res.status(400).json({ error: 'Missing amount or orderId' });
+    if (!amount || isNaN(amount)) {
+      return res.status(400).json({ error: 'Invalid or missing amount' });
     }
+
+    const orderId = await getOrderId();
 
     const payload = {
       amount,
@@ -34,7 +52,7 @@ app.post('/pay', async (req, res) => {
     };
 
     const response = await axios.post(
-      process.env.POCKET_API_URL || 'http://pay.threeg.asia/-Test', // fallback to test page
+      process.env.POCKET_API_URL || 'http://pay.threeg.asia/api/payment',
       payload,
       {
         headers: {
@@ -58,7 +76,7 @@ app.post('/pay', async (req, res) => {
   }
 });
 
-// Callback from Pocket Pay
+// Pocket Pay callback
 app.post('/payment-callback', (req, res) => {
   console.log('📩 Pocket Pay callback received:', req.body);
 
@@ -66,23 +84,24 @@ app.post('/payment-callback', (req, res) => {
 
   if (status === 'SUCCESS') {
     console.log(`✅ Order ${order_id} paid successfully.`);
-    // TODO: Update your DB or record this
+    // Save or update in DB here
   } else {
     console.log(`❌ Order ${order_id} failed or cancelled.`);
-    // TODO: Update status
+    // Update status
   }
 
   res.sendStatus(200);
 });
 
-// Return URL after payment success
+// After payment redirect
 app.get('/payment-success', (req, res) => {
   res.send(`<h1>✅ Payment Successful</h1><p>Thank you for your booking.</p>`);
 });
+
+// Simple file creation (optional)
+fs.writeFileSync('mynewfile.txt', 'This is my new file!');
 
 // Start server
 app.listen(PORT, () => {
   console.log(`🚕 Jom Jalan server running on http://localhost:${PORT}`);
 });
-const fs = require('fs');
-fs.writeFileSync('mynewfile.txt', 'This is my new file!');
