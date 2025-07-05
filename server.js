@@ -50,7 +50,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-const axios = require('axios');
 
 app.post('/create-pocket-payment', async (req, res) => {
   try {
