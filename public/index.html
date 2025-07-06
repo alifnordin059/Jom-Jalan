@@ -1,145 +1,18 @@
-<!-- index.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Jom Jalan Booking</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 0;
-    }
+<form id="bookingForm">
+  <input name="customer_name" type="text" placeholder="Full Name" required />
+  <input name="customer_email" type="email" placeholder="Email Address" required />
+  
+  <select name="service_type" required>
+    <option value="">-- Select Service --</option>
+    <option value="Airport Transfer">Airport Transfer</option>
+    <option value="City Tour">City Tour</option>
+  </select>
 
-    .container {
-      max-width: 500px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      margin-top: 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
+  <input name="pickup_location" type="text" placeholder="Pickup Location" required />
+  <input name="dropoff_location" type="text" placeholder="Drop-off Location" required />
+  <input name="booking_time" type="datetime-local" required />
+  <input name="passengers" type="number" placeholder="Number of Passengers" required />
+  <input name="amount" type="number" placeholder="Amount (BND)" required />
 
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 15px;
-      margin-top: 10px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-
-    button {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #218838;
-    }
-
-    .note {
-      font-size: 13px;
-      color: #666;
-      text-align: center;
-      margin-top: 15px;
-    }
-
-    .whatsapp-btn {
-      display: none;
-      margin-top: 20px;
-      background-color: #25D366;
-    }
-
-    .whatsapp-btn a {
-      display: block;
-      color: white;
-      text-align: center;
-      padding: 15px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    <h2>Book & Pay</h2>
-    <form id="bookingForm">
-      <input name="customer_name" type="text" placeholder="Full Name" required />
-      <input name="customer_email" type="email" placeholder="Email Address" required />
-      
-      <select name="service_type" required>
-        <option value="">-- Select Service --</option>
-        <option value="Airport Transfer">Airport Transfer</option>
-        <option value="City Tour">City Tour</option>
-      </select>
-
-      <input name="amount" type="number" placeholder="Amount (BND)" required />
-
-      <button type="submit">Proceed to Payment</button>
-    </form>
-
-    <div class="whatsapp-btn" id="whatsappBtn">
-      <a href="#" target="_blank" id="whatsappLink">📲 Confirm via WhatsApp</a>
-    </div>
-
-    <div class="note">You will be redirected to secure Pocket Payment gateway.</div>
-  </div>
-
-  <script>
-    document.getElementById('bookingForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const name = form.customer_name.value;
-      const email = form.customer_email.value;
-      const service = form.service_type.value;
-      const amount = form.amount.value;
-
-      const data = {
-        customer_name: name,
-        customer_email: email,
-        service_type: service,
-        amount: amount
-      };
-
-      try {
-        const res = await fetch("https://jom-jalan-taxi-brunei-services.onrender.com/create-pocket-payment", {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-
-        const result = await res.json();
-        if (result.payment_url) {
-          const whatsappLink = document.getElementById("whatsappLink");
-          const msg = `Hi, I have just booked a *${service}*.\n\nName: ${name}\nEmail: ${email}\nAmount: BND ${amount}\n\nPlease confirm my booking.`;
-
-          whatsappLink.href = `https://wa.me/6737137859?text=${encodeURIComponent(msg)}`;
-          document.getElementById("whatsappBtn").style.display = "block";
-
-          window.location.href = result.payment_url;
-        } else {
-          alert("Payment failed to generate. Please try again.");
-        }
-      } catch (err) {
-        alert("Error: " + err.message);
-      }
-    };
-  </script>
-
-</body>
-</html>
+  <button type="submit">Proceed to Payment</button>
+</form>
