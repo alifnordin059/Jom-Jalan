@@ -1,1 +1,110 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>City Tour Booking - Jom Jalan</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      background: #28a745;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .note {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>City Tour Booking</h2>
+    <form id="bookingForm">
+      <input name="customer_name" type="text" placeholder="Full Name" required />
+      <input name="customer_email" type="email" placeholder="Email Address" required />
+      <input name="pickup_location" type="text" placeholder="Pickup Location (e.g. Hotel)" required />
+      <input name="dropoff_location" type="text" placeholder="Drop-off Location" required />
+      <input name="booking_time" type="datetime-local" required />
+      <input name="passengers" type="number" min="1" placeholder="Number of Passengers" required />
+      <input name="amount" type="number" min="1" placeholder="Amount (BND)" required />
+      <select name="service_type" required hidden>
+        <option value="City Tour" selected>City Tour</option>
+      </select>
+      <button type="submit">Proceed to Payment</button>
+    </form>
+    <div class="note">You will be redirected to Pocket Payment and WhatsApp to confirm booking.</div>
+  </div>
+
+  <script>
+    document.getElementById('bookingForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        customer_name: form.customer_name.value,
+        customer_email: form.customer_email.value,
+        service_type: "City Tour",
+        pickup_location: form.pickup_location.value,
+        dropoff_location: form.dropoff_location.value,
+        booking_time: form.booking_time.value,
+        passengers: form.passengers.value,
+        amount: form.amount.value
+      };
+      try {
+        const res = await fetch("https://jom-jalan-taxi-brunei-services.onrender.com/create-pocket-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.payment_url) {
+          const msg = `Hi, I booked a *City Tour*.\n\nName: ${data.customer_name}\nEmail: ${data.customer_email}\nPickup: ${data.pickup_location}\nDrop-off: ${data.dropoff_location}\nDate/Time: ${data.booking_time}\nPassengers: ${data.passengers}\nAmount: BND ${data.amount}\n\nPlease confirm my booking.`;
+          const whatsappLink = `https://wa.me/6737137859?text=${encodeURIComponent(msg)}`;
+          window.open(whatsappLink, "_blank");
+          window.location.href = result.payment_url;
+        } else {
+          alert("Payment URL not returned. Please try again.");
+        }
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    };
+  </script>
+</body>
+</html>
