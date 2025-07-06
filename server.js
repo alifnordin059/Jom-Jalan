@@ -5,21 +5,21 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 
-// ✅ Serve static files from /public folder
+// ✅ Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ Route to serve homepage
+// ✅ Serve homepage
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// ✅ Callback route (Pocket Pay will notify you here)
+// ✅ Pocket Pay callback (optional logging)
 app.post('/payment-callback', (req, res) => {
-  console.log('📩 Pocket Pay callback received:', req.body);
-  res.sendStatus(200); // Tell Pocket Pay we received the callback
+  console.log('📩 Payment callback received:', req.body);
+  res.sendStatus(200);
 });
 
-// ✅ Pocket Pay API integration route
+// ✅ Create Pocket payment using /payments/create
 app.post('/create-pocket-payment', async (req, res) => {
   try {
     const orderId = Math.floor(10000 + Math.random() * 90000);
@@ -28,41 +28,33 @@ app.post('/create-pocket-payment', async (req, res) => {
       api_key: "XnUgH1PyIZ8p1iF2IbKUiOBzdrLPNnWq",
       salt: "FOLzaoJSdbgaNiVVA73vGiIR7yovZury4OdOalPFoWTdKmDVxfoJCJYTs4nhUFS2",
       amount: req.body.amount || 100,
-      subamount_1: req.body.amount || 100,
-      subamount_1_label: "Order Total",
-      subamount_2: 0,
-      subamount_3: 0,
-      subamount_4: 0,
-      subamount_5: 0,
       order_id: orderId,
-      order_info: `Order Info ${orderId}`,
+      order_info: `Booking Order #${orderId}`,
       order_desc: "Taxi / Tour Booking",
-      return_url: "https://www.threegmedia.com/",
-      callback_url: "http://pocket-api.threeg.asia/callbase",
+      return_url: "https://jom-jalan-taxi-brunei-services.onrender.com/thank-you",
+      callback_url: "https://jom-jalan-taxi-brunei-services.onrender.com/payment-callback",
+      subamount_1: req.body.amount || 100,
+      subamount_1_label: "Total Booking",
       discount: 0
     };
 
-    const response = await axios.post("http://pay.threeg.asia/payments/getNewOrderId", payload, {
+    const response = await axios.post("https://pay.threeg.asia/payments/create", payload, {
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
       }
     });
 
-    console.log("📦 Pocket response:", response.data);
+    const { payment_url, order_ref, success_indicator, qr } = response.data?.data || {};
 
-    const newId = response.data?.data?.new_id;
-
-    if (!newId) {
+    if (!payment_url) {
       return res.status(400).json({
-        error: "No order ID returned from Pocket Pay",
+        error: "Payment URL not returned",
         details: response.data
       });
     }
 
-    const redirectUrl = `http://pay.threeg.asia/payments/payNow/${newId}`;
-
-    res.json({ payment_url: redirectUrl });
+    res.json({ payment_url, order_ref, success_indicator, qr });
 
   } catch (error) {
     console.error("❌ Pocket Pay error:", error.response?.data || error.message);
@@ -73,8 +65,8 @@ app.post('/create-pocket-payment', async (req, res) => {
   }
 });
 
-// ✅ Start server
+// ✅ Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚕 Server is running on port ${PORT}`);
+  console.log(`🚕 Server running on port ${PORT}`);
 });
