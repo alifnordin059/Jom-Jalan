@@ -37,8 +37,8 @@ app.post('/create-pocket-payment', async (req, res) => {
       order_id: orderId,
       order_info: `Order Info ${orderId}`,
       order_desc: "Taxi / Tour Booking",
-      return_url: "https://jom-jalan-taxi-brunei-services.onrender.com/thank-you",
-      callback_url: "https://jom-jalan-taxi-brunei-services.onrender.com/payment-callback",
+      return_url: "https://www.threegmedia.com/",
+      callback_url: "http://pocket-api.threeg.asia/callbase",
       discount: 0
     };
 
