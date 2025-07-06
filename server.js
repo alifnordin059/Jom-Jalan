@@ -1,19 +1,22 @@
 const express = require('express');
 const axios = require('axios');
+const path = require('path');
 
 const app = express();
-
 app.use(express.json());
 
-// GET / — prevent "Cannot GET /" on Render
+// ✅ Serve static HTML files from /public
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ✅ Route to serve homepage (index.html)
 app.get('/', (req, res) => {
-  res.send('API is running. Use POST /create-pocket-payment');
+  res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
-// POST /create-pocket-payment — Pocket API integration
+// ✅ POST /create-pocket-payment — Pocket Pay API integration
 app.post('/create-pocket-payment', async (req, res) => {
   try {
-    const orderId = Math.floor(10000 + Math.random() * 90000); // random order_id
+    const orderId = Math.floor(10000 + Math.random() * 90000);
 
     const payload = {
       api_key: "XnUgH1PyIZ8p1iF2IbKUiOBzdrLPNnWq",
@@ -49,7 +52,7 @@ app.post('/create-pocket-payment', async (req, res) => {
       });
     }
 
-    res.json({ redirectUrl });
+    res.json({ payment_url: redirectUrl });
 
   } catch (error) {
     console.error("Error:", error.response?.data || error.message);
@@ -60,7 +63,7 @@ app.post('/create-pocket-payment', async (req, res) => {
   }
 });
 
-// Start server on Render-assigned port or 3000
+// ✅ Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`API server running on port ${PORT}`);
