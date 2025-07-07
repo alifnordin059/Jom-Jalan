@@ -1,79 +1,86 @@
 const express = require('express');
 const axios = require('axios');
-const path = require('path');
+require('dotenv').config();
 
 const app = express();
 app.use(express.json());
 
-// Load config from environment variables (with defaults)
-const apiKey = process.env.POCKET_API_KEY;
-const salt = process.env.POCKET_SALT;
-const pocketApiUrl = process.env.POCKET_API_URL || 'https://pay.threeg.asia/payments/create';
-const returnUrl = process.env.RETURN_URL || 'https://jom-jalan-taxi-brunei-services.onrender.com/thank-you';
-const callbackUrl = process.env.CALLBACK_URL || 'https://jom-jalan-taxi-brunei-services.onrender.com/payment-callback';
-const PORT = process.env.PORT || 3000;
+const POCKET_API_URL = 'http://pay.threeg.asia/api';
+const API_KEY = process.env.POCKET_API_KEY;
+const SALT = process.env.POCKET_SALT;
 
-// Serve static files from /public
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Homepage route
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public/index.html'));
-});
-
-// Payment callback route (Pocket will notify here)
-app.post('/payment-callback', (req, res) => {
-  console.log('📩 Payment callback received:', req.body);
-  res.sendStatus(200);
-});
-
-// Create Pocket payment route
 app.post('/create-pocket-payment', async (req, res) => {
   try {
-    const orderId = Math.floor(10000 + Math.random() * 90000);
+    const amount = 100; // Example fixed amount
+    const return_url = "https://www.threegmedia.com/";
+    const callback_url = "http://pocket-api.threeg.asia/callbase";
 
-    const payload = {
-      api_key: apiKey,
-      salt: salt,
-      amount: req.body.amount || 100,
-      order_id: orderId,
-      order_info: `Booking Order #${orderId}`,
-      order_desc: "Taxi / Tour Booking",
-      return_url: returnUrl,
-      callback_url: callbackUrl,
-      subamount_1: req.body.amount || 100,
-      subamount_1_label: "Total Booking",
+    // STEP 1: Get New Order ID
+    const orderRes = await axios.post(`${POCKET_API_URL}/payments/getNewOrderId`, {
+      api_key: API_KEY,
+      salt: SALT
+    });
+    const order_id = orderRes.data.order_id;
+
+    // STEP 2: Generate Hash
+    const hashPayload = {
+      api_key: API_KEY,
+      salt: SALT,
+      subamount_1: amount,
+      subamount_1_label: "Order Total",
+      subamount_2: 0,
+      subamount_3: 0,
+      subamount_4: 0,
+      subamount_5: 0,
+      order_id,
+      order_info: `This is the order info ${order_id}.`,
+      order_desc: "City Tour Booking",
+      return_url,
+      callback_url,
       discount: 0
     };
 
-    const response = await axios.post(pocketApiUrl, payload, {
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      }
+    const hashRes = await axios.post(`${POCKET_API_URL}/payments/hash`, hashPayload);
+    const hashed_data = hashRes.data.hash;
+
+    // STEP 3: Create Payment Link & QR
+    const createPayload = {
+      api_key: API_KEY,
+      salt: SALT,
+      hashed_data,
+      subamount_1: amount,
+      subamount_2: 0,
+      subamount_3: 0,
+      subamount_4: 0,
+      subamount_5: 0,
+      subamount_1_label: "Order Total",
+      subamount_2_label: "",
+      subamount_3_label: "",
+      subamount_4_label: "",
+      subamount_5_label: "",
+      order_id,
+      order_info: `This is the order info ${order_id}.`,
+      order_desc: "City Tour Booking",
+      return_url,
+      callback_url,
+      discount: 0,
+      promo: "",
+      promo_code: ""
+    };
+
+    const createRes = await axios.post(`${POCKET_API_URL}/payments/create`, createPayload);
+
+    // ✅ Response to frontend
+    res.json({
+      order_id,
+      payment_url: createRes.data.payment_url,
+      qr_code: createRes.data.qr_code
     });
 
-    const { payment_url, order_ref, success_indicator, qr } = response.data?.data || {};
-
-    if (!payment_url) {
-      return res.status(400).json({
-        error: "Payment URL not returned",
-        details: response.data
-      });
-    }
-
-    res.json({ payment_url, order_ref, success_indicator, qr });
-
-  } catch (error) {
-    console.error("❌ Pocket Pay error:", error.response?.data || error.message);
-    res.status(500).json({
-      error: "Pocket Pay request failed",
-      details: error.response?.data || error.message
-    });
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({ error: 'Payment link generation failed' });
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚕 Server running on port ${PORT}`);
-});
+app.listen(3000, () => console.log('✅ PocketPay Node server running on port 3000'));
