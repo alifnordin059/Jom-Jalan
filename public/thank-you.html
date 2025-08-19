@@ -1,1 +1,91 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Thank You - Jom Jalan Booking</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    h1 {
+      color: #28a745;
+      margin-bottom: 20px;
+      font-size: 32px;
+    }
+    .checkmark {
+      font-size: 64px;
+      color: #28a745;
+      margin-bottom: 20px;
+    }
+    p {
+      color: #333;
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    .btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      margin: 20px 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+    }
+    .btn:hover {
+      background: #218838;
+    }
+    .btn-secondary {
+      background: #6c757d;
+    }
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+    .note {
+      font-size: 14px;
+      color: #666;
+      margin-top: 20px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="checkmark">✓</div>
+    <h1>Thank You!</h1>
+    <p>Your booking has been submitted successfully!</p>
+    <p>We have received your payment and booking details. Our team will contact you shortly via WhatsApp to confirm your booking.</p>
+    <p>You should have received a WhatsApp notification with your booking details.</p>
+    
+    <a href="/" class="btn">Book Another Service</a>
+    <a href="https://wa.me/6737137859" class="btn btn-secondary" target="_blank">Contact Us</a>
+    
+    <div class="note">
+      For any questions or changes to your booking, please contact us directly on WhatsApp.
+    </div>
+  </div>
+</body>
+</html>
